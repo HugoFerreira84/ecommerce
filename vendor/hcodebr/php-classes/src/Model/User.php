@@ -8,6 +8,7 @@
 	class User extends Model{
 
 		const SESSION = "User";
+		const SECRET = "HcodePhp7_Secret";
 		
 		public function login($login,$password)
 		{
@@ -19,7 +20,7 @@
 			));
 
 			if (count($result) === 0) {
-				throw new \Exption("Usuário inexistente ou senha inválida.");
+				throw new \Exption("Usuário inexistente ou senha inválida." );
 			}
 
 			$data = $result[0];
@@ -31,6 +32,8 @@
 				$user->setData($data);
 
 				$_SESSION[User::SESSION] = $user->getValues();
+
+				var_dump($user);
 
 				return $user;
 
@@ -80,13 +83,13 @@
 
 			$sql = new Sql();
 
-			$results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrpphone, :inadimin)", array(
+			$results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrpphone, :inadmin)", array(
 				":desperson"=>$this->getdesperson(),
 				":deslogin"=>$this->getdeslogin(),
 				":despassword"=>$this->getdespassword(),
 				":desemail"=>$this->getdesemail(),
 				":nrpphone"=>$this->getnrphone(),
-				":inadimin"=>$this->getinadmin()
+				":inadmin"=>$this->getinadmin()
 			));
 
 			$this->setData($results[0]);
@@ -108,14 +111,14 @@
 
 			$sql = new Sql();
 
-			$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrpphone, :inadimin)", array(
+			$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrpphone, :inadmin)", array(
 				":iduser"=>$this->getiduser(),
 				":desperson"=>$this->getdesperson(),
 				":deslogin"=>$this->getdeslogin(),
 				":despassword"=>$this->getdespassword(),
 				":desemail"=>$this->getdesemail(),
 				":nrpphone"=>$this->getnrphone(),
-				":inadimin"=>$this->getinadmin()
+				":inadmin"=>$this->getinadmin()
 			));
 
 			$this->setData($results[0]);			
@@ -129,6 +132,47 @@
 			$sql->query("CALL sp_users_delete(:iduser)", array(
 				":iduser"=>$this->getiduser()
 			));
+
+		}
+
+		public static function getForgot($email){
+
+			$sql = new Sql();
+
+			$results = $sql->select("SELECT * FROM tb_persons a INNER JOIN tb_users b USING(idperson) WHERE a.desemail = :desemail;", array(
+
+				":email"=>$email
+
+			));
+
+			if (count($results) === 0) {
+				throw new \Exception("Não foi possível recuperar a senha", 1);				
+			}else{
+				$results2 = $sql->select("CALL sp_userspasswordsrecoveries_create(:iduser, :desip)", array(
+					":iduser"=>$data["iduser"],
+					":desip"=>$_SERVER["REMOTE_ADDR"]
+				));
+
+				if (count($results2) === 0) {
+					throw new \Exception("Não foi possível recuperar a senha", 1);					
+				}else{
+					$dataRecovery = $results2[0];
+
+					$code = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, User::SECRET, $dataRecovery["idrecovery"], MCRYPT_MODE_ECB));
+					$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$code";
+
+					$mailer = new Mailer($data["desemail"],$data["desperson"], "Redefinir a senha da Hcode Store", "forgot", array(
+
+						"name"=>$data["desperson"],
+						"link"=>$link
+
+					));
+
+					$mailer->send();
+					return $data;
+
+				}
+			}
 
 		}
 
