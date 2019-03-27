@@ -4,15 +4,16 @@ namespace Hcode;
 
 use Rain\Tpl;
 
-class Mailer{
-
-	const USERNAME = "maconhaster@gmail.com";
+class Mailer {
+	
+	const USERNAME = "cursophp7hcode@gmail.com";
 	const PASSWORD = "<?password?>";
 	const NAME_FROM = "Hcode Store";
 
-	private $this->mail;
+	private $mail;
 
-	public function __construct($toAddress, $toName, $subject, $tplName, $data = array()){
+	public function __construct($toAddress, $toName, $subject, $tplName, $data = array())
+	{
 
 		$config = array(
 			"tpl_dir"       => $_SERVER["DOCUMENT_ROOT"]."/views/email/",
@@ -25,26 +26,12 @@ class Mailer{
 		$tpl = new Tpl;
 
 		foreach ($data as $key => $value) {
-			$tpl->assign($key, $value)
+			$tpl->assign($key, $value);
 		}
 
 		$html = $tpl->draw($tplName, true);
 
-		//Create a new PHPMailer instance
-		$this->$this->mail = new \PHPMailer\PHPMailer\PHPMailer();
-
-		$this->mail->CharSet = 'UTF-8';
-		//Tell PHPMailer to use SMTP
-		$this->mail->isSMTP();
-
-		$this->mail->SMTPOptiona = array(
-		    'ssl' => array(
-		        'verify_peer' => false,
-		        'verify_peer_name' => false,
-		        'allow_self_signed' => true
-		    )
-		);
-
+		$this->mail = new \PHPMailer;
 
 		//Tell PHPMailer to use SMTP
 		$this->mail->isSMTP();
@@ -80,10 +67,10 @@ class Mailer{
 		$this->mail->Password = Mailer::PASSWORD;
 
 		//Set who the message is to be sent from
-		$this->mail->SetFrom(Mailer::USERNAME, Mailer::NAME_FROM);
+		$this->mail->setFrom(Mailer::USERNAME, Mailer::NAME_FROM);
 
 		//Set an alternative reply-to address
-		$this->mail->addReplyTo('', 'First Last');
+		//$this->mail->addReplyTo('replyto@example.com', 'First Last');
 
 		//Set who the message is to be sent to
 		$this->mail->addAddress($toAddress, $toName);
@@ -99,20 +86,17 @@ class Mailer{
 		$this->mail->AltBody = 'This is a plain-text message body';
 
 		//Attach an image file
-		// $this->mail->addAttachment('images/phpmailer_mini.png');
-
-		
-
+		//$mail->addAttachment('images/phpmailer_mini.png');
 
 	}
 
-	public function send(){
+	public function send()
+	{
+
 		return $this->mail->send();
-	}
 
+	}
 
 }
-
-
 
  ?>
